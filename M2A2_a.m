@@ -1,5 +1,5 @@
 %--------------------------------------------------------------------------
-% This script is d), e), f) part of mechanical assignment LCSD  
+% This script is the solution for M-2 assignment of 
 % Date - Nov 26 2024 
 % Author - AG Kaimal 
 %--------------------------------------------------------------------------
@@ -33,7 +33,7 @@ B = [0 0;
      (-Kt/(J1*R)) 0;
      0 0;
      0 0;
-     0 (-1/Bf)];
+     0 (1/Bf)];
 % Display the A and B matrices
 fprintf('\n\tThis is the A matrix:\n'); 
 disp(A); 
@@ -56,7 +56,7 @@ disp(Q);
 %--------------------------------------------------------------------------
 % 3.1 Case 1: Output y = [theta2; omega2]
 C1 = [0 0 1 0 0; 0 0 0 1 0]; 
- 
+
 
 % 3.2 Case 2: Output y = [theta2; omega2]
 C2 = [0 -Ke/R 0 0 0; 0 0 D2/Bf 0 -D2/Bf]; 
@@ -80,24 +80,62 @@ disp(O2);
 % nested loops for finding values of drop in controllability matrix 
 
 %define the range running R values
-Rrun=linspace(0.001,10000,10);
+Rrun=linspace(0.001,10000,25);
 
 %define the range of running D1 values 
-D1run=linspace(0.1,400,10);
+D1run=linspace(0.1,400,25);
 
 % nest loop building 
 
-rankog=rank(subs(Q,[R D1],[1 20]));
+rankog=rank(double(subs(Q,[R ,D1],[1 ,20])));
 ranki=zeros(length(Rrun),length(D1run));
 uncntrl_values=[];
+safe_value=[];
 for i=1:length(Rrun)
     for j=1:length(D1run)
-        Qi=subs(Q,[R,D1],[Rrun(i),D1run(j)]);
+        Qi=subs(Q,[R D1],[Rrun(i) D1run(j)]);
         ranki(i,j)=rank(Qi);
         if ranki(i, j) < rankog
             uncntrl_values = [uncntrl_values; Rrun(i), D1run(j), ranki(i,j)];
+        else 
+            safe_value = [safe_value; Rrun(i), D1run(j), ranki(i,j)];
         end
     end
 end
 
+% -------------------------------------------------------------------------
+% descritization 
+% -------------------------------------------------------------------------
 
+% Building A_d descrete matrix 
+% A_d = exp(hA)
+
+% Sampling time interval 
+h=0.001;      
+
+A_d=exp(h.*A);
+
+%--------------------------------------------------------------------------
+
+% Building B_d matrix for zero hold implementation 
+
+%--------------------------------------------------------------------------
+syms t 
+Bfun=(exp(A.*t))*B;
+B_d=int(Bfun,0,h);
+
+%--------------------------------------------------------------------------
+% Stability analysis 
+%--------------------------------------------------------------------------
+
+A_d1=double(subs(A,[R,D1],[1,20]));
+Stab_eig=eig(A_d1);
+disp(Stab_eig);
+
+%--------------------------------------------------------------------------
+% Contrallability of the discrete system
+%--------------------------------------------------------------------------
+
+Q_d=[B_d A_d*B_d A_d^2*B_d A_d^3*B_d A_d^4*B_d];
+
+%--------------------------------------------------------------------------

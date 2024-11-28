@@ -4,7 +4,7 @@
 % Date - Nov 28 2024 
 % Author - AG Kaimal 
 %--------------------------------------------------------------------------
-% Declaring all the variables in the question  
+% Physical continues time input 
 %--------------------------------------------------------------------------
 
 
